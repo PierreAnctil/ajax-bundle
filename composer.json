@@ -1,0 +1,25 @@
+{
+    "name" : "axiolab/ajax-bundle",
+    "description" : "Provides Ajax utils for symfony",
+    "type" : "symfony-bundle",
+    "authors" : [{
+        "name" : "Mathieu Muller",
+        "email" : "mathieu.muller@axiocode.com"
+    }],
+    "keywords" : [
+        "symfony ajax json"
+    ],
+    "license" : [
+        "MIT"
+    ],
+    "autoload" : {
+        "psr-4" : {
+            "Axiolab\\AjaxBundle\\" : ""
+        }
+    },
+    "extra" : {
+        "branch-alias" : {
+            "dev-master" : "1.0.x-dev"
+        }
+    }
+}

@@ -1,0 +1,6 @@
+parameters:
+    axiolab.ajax_handler.class: "Axiolab\\AjaxBundle\\Service\\AjaxHandler"
+
+services:
+    axiolab.ajax_handler:
+        class: "%axiolab.ajax_handler.class%"
