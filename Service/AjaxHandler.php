@@ -44,7 +44,7 @@ class AjaxHandler
         return new Response($this->serializer->serialize($response, 'json'));
     }
 
-    public function renderOnly($template, $status, $options = [])
+    public function renderOnly($template, $status = AjaxResponse::STATUS_SUCCESS, $options = [])
     {
         return $this->render($template, $status, null, null, $options);
     }
