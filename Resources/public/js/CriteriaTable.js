@@ -6,20 +6,24 @@ var CriteriaTable = function(){
     self.filters_form = null;
     self.reload_route = null;
     self.isReloading = null;
+    self.activeSortColor = "#ea6a2a";
+    self.passiveSortColor = "#fff";
+
     /**
      * Initialize an editable datagrid
      * @param  string table_container_id The id of the datagrid parent div (e.g. '#parentDiv')
      * @param  string form_filters_id    The id of the datagrid filters form (e.g. '#filtersForm')
      * @param  url    reload_route       The url for the reload action (generated with FosJSRouter)
      */
-    self.initialize = function (table_container_id, form_filters_id, reload_route, loader_id) {
+    self.initialize = function (table_container_id, form_filters_id, reload_route) {
         if (self.table !== null) {
             return true;
         }
-
         self.container    = $(table_container_id);
-        self.table        = self.container.find('.edit-table');
-        self.loader       = $(loader_id);
+        self.table        = self.container.find('.criteria-table');
+        self.table.trigger('axiolab.table.load');
+        self.activeSortColor = typeof self.table.data('activeSortColor') === 'undefined' ? self.activeSortColor :  self.table.data('activeSortColor');
+        self.passiveSortColor = typeof self.table.data('passiveSortColor') === 'undefined' ? self.passiveSortColor : self.table.data('passiveSortColor');
         self.filters_form = $(form_filters_id);
         self.reload_route = typeof reload_route != 'undefined' && reload_route.length ? reload_route : self.filters_form.attr('action');
         self.filters_form.on('submit', function(){
@@ -35,7 +39,8 @@ var CriteriaTable = function(){
         //load the sort events
         self.sortEvents();
 
-        self.container.trigger('initialized');
+        self.container.trigger('axiolab.table.initialized');
+
         return self;
     };
 
@@ -44,26 +49,15 @@ var CriteriaTable = function(){
     };
 
     self.reinitialize = function () {
-        self.table = self.container.find('.edit-table');
+        self.table = self.container.find('.criteria-table');
         self.sortFilters();
         self.paginationEvents();
         self.sortEvents();
-        self.container.trigger('reinitialized');
+        self.container.trigger('axiolab.table.reinitialized');
     };
 
     self.ajaxRequest = function (data, callback) {
-        return $.ajax({
-            type: "POST",
-            url: self.reload_route,
-            data: data,
-            cache:false,
-            success: function(response)
-            {
-                if (typeof(callback) == "function"){
-                    callback(response);
-                }
-            }
-        });
+        return AxiolabAjax.request(self.reload_route, data, callback);
     };
 
     //create sort filters in a list
@@ -76,9 +70,9 @@ var CriteriaTable = function(){
             self.filters_form.find('.sort-value').val(self.table.data('default-sort'));
         }
 
-        var sortDefault = '<span class="fa-stack fa-sm pointer sort-icons-wrapper"><i class="fa fa-sort fa-stack-1x" style="color: #fff"></i></span>';
-        $sortDesc       = $(sortDefault).append('<i class="fa fa-sort-down fa-stack-1x" style="color: #ea6a2a"></i>');
-        $sortAsc        = $(sortDefault).append('<i class="fa fa-sort-up fa-stack-1x" style="color: #ea6a2a"></i>');
+        var sortDefault = '<span class="fa-stack fa-sm pointer sort-icons-wrapper"><i class="fa fa-sort fa-stack-1x" style="color: '+ self.passiveSortColor +'"></i></span>';
+        $sortDesc       = $(sortDefault).append('<i class="fa fa-sort-down fa-stack-1x" style="color: '+ self.activeSortColor +'"></i>');
+        $sortAsc        = $(sortDefault).append('<i class="fa fa-sort-up fa-stack-1x" style="color: '+ self.activeSortColor +'"></i>');
         var sorted_by   = self.filters_form.find('.sort-value').val().split(',');
 
         self.table.find(".sort-column").each(function(){
@@ -154,7 +148,6 @@ var CriteriaTable = function(){
         if (self.isReloading !== null) {
             self.isReloading.abort();
             self.isReloading = null;
-            self.loader.html('');
         }
 
         if (self.page !== null) {
@@ -163,31 +156,23 @@ var CriteriaTable = function(){
 
         var data = self.getFilters(self.page);
         if (triggerEvents) {
-            self.container.trigger('beforeReload');
+            self.container.trigger('axiolab.table.beforeReload');
         }
-        self.loader.append(Ajax.loader); // Specific to SHF
 
         self.isReloading = self.ajaxRequest(
             data,
             function(response) {
-                if (response.valid){
-                    //var tableId = self.table.attr('id');
-                    /*var html = $(response.template).filter("#" + tableId);
-                    if (html.length < 1) {
-                        html = $(response.template).find("#" + tableId);
-                    }
-                    self.table.replaceWith(html);*/
+                if (response.status === 1){
                     self.container.html(response.template);
                     self.reinitialize();
                     if (triggerEvents) {
-                        self.container.trigger('afterReload');
+                        self.container.trigger('axiolab.table.afterReload');
                     }
                 } else {
                     var formId = '#' +self.filters_form.attr('id');
                     self.filters_form.replaceWith($(response.template).find(formId));
                 }
                 self.isReloading = null;
-                self.loader.html('');
             }
         );
     };
@@ -197,7 +182,7 @@ var CriteriaTable = function(){
             var targetPage = $(this).data('page');
             self.reloadTable(targetPage);
             self.container.find(".current-page").val(targetPage);
-            self.container.trigger("changed.page");
+            self.container.trigger("axiolab.table.changed.page");
         });
     };
 
@@ -215,7 +200,7 @@ var CriteriaTable = function(){
 
 
             self.reloadTable();
-            self.container.trigger("changed.sort");
+            self.container.trigger("axiolab.table.changed.sort");
         });
     };
 
