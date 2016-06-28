@@ -4,13 +4,12 @@ var AjaxResponse = function(){
     self.request = function(route, data, callback, type) {
         var requestType = type || 'POST';
 
-        $.ajax({
+        return $.ajax({
             type: requestType,
             url: route,
             data: data,
             cache:false,
             async: true,
-            contentType: "application/json",
             success: function(response)
             {
                 response = JSON.parse(response);
@@ -88,3 +87,5 @@ var AjaxResponse = function(){
         });
     };
 };
+
+var AxiolabAjax = new AjaxResponse();
