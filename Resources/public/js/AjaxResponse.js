@@ -13,20 +13,23 @@ var AjaxResponse = function(){
             success: function(response)
             {
                 if (typeof response == 'string' && response.indexOf('_sign_|_in_') > -1) {
-                    $(document).trigger('axiolabajax.login');
+                    $(document).trigger('axiolabajax.login_required');
                 } else {
                     response = JSON.parse(response);
-                    self.manageResponse(response, callback);   
+                    self.manageResponse(response, callback);
                 }
+                $(document).trigger('axiolabajax.success');
             },
-            error: function(response) {
-                self.notify(4, 'AjaxResponse : an error occured ');
-            },
-            complete: function(xhr) {
+            error: function(xhr) {
                 if (xhr.status == 403) {
                     $(document).trigger('axiolabajax.access_denied');
+                } else {
+                    self.notify(4, ['AjaxResponse : an error occured ']);
                 }
-            } 
+                $(document).trigger('axiolabajax.error');
+            }, complete: function(xhr) {
+                $(document).trigger('axiolabajax.complete');
+            }
         });
     };
 
@@ -91,19 +94,23 @@ var AjaxResponse = function(){
             data: values,
             success:    function(response) {
                 if (typeof response == 'string' && response.indexOf('_sign_|_in_') > -1) {
-                    $(document).trigger('axiolabajax.login');
+                    $(document).trigger('axiolabajax.login_required');
                 } else {
                     response = JSON.parse(response);
-                    self.manageResponse(response, callback);   
+                    self.manageResponse(response, callback);
                 }
+                $(document).trigger('axiolabajax.success');
             },
-            error: function(response) {
-                self.notify(4, 'AjaxResponse : an error occured ');
-            },
-            complete: function(xhr) {
+            error: function(xhr) {
                 if (xhr.status == 403) {
                     $(document).trigger('axiolabajax.access_denied');
+                } else {
+                    self.notify(4, 'AjaxResponse : an error occured ');
                 }
+                $(document).trigger('axiolabajax.error');
+            },
+            complete: function(xhr) {
+                $(document).trigger('axiolabajax.complete');
             }
         });
     };
