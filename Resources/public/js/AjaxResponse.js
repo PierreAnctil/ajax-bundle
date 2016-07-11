@@ -12,8 +12,12 @@ var AjaxResponse = function(){
             async: true,
             success: function(response)
             {
-                response = JSON.parse(response);
-                self.manageResponse(response, callback);
+                if (typeof response == 'string' && response.indexOf('_sign_|_in_') > -1) {
+                    $(document).trigger('axiolabajax.login');
+                } else {
+                    response = JSON.parse(response);
+                    self.manageResponse(response, callback);   
+                }
             },
             error: function(response) {
                 self.notify(4, 'AjaxResponse : an error occured ');
@@ -81,8 +85,12 @@ var AjaxResponse = function(){
             url: $form.attr('action'),
             data: values,
             success:    function(response) {
-                response = JSON.parse(response);
-                self.manageResponse(response, callback);
+                if (typeof response == 'string' && response.indexOf('_sign_|_in_') > -1) {
+                    $(document).trigger('axiolabajax.login');
+                } else {
+                    response = JSON.parse(response);
+                    self.manageResponse(response, callback);   
+                }
             }
         });
     };
