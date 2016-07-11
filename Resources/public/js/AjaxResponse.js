@@ -21,7 +21,12 @@ var AjaxResponse = function(){
             },
             error: function(response) {
                 self.notify(4, 'AjaxResponse : an error occured ');
-            }
+            },
+            complete: function(xhr, textStatus) {
+                if (xhr === 403) {
+                    $(document).trigger('axiolabajax.access_denied');
+                }
+            } 
         });
     };
 
@@ -90,6 +95,14 @@ var AjaxResponse = function(){
                 } else {
                     response = JSON.parse(response);
                     self.manageResponse(response, callback);   
+                }
+            },
+            error: function(response) {
+                self.notify(4, 'AjaxResponse : an error occured ');
+            },
+            complete: function(xhr, textStatus) {
+                if (xhr === 403) {
+                    $(document).trigger('axiolabajax.access_denied');
                 }
             }
         });
