@@ -105,7 +105,7 @@ var AjaxResponse = function(){
                 if (xhr.status == 403) {
                     $(document).trigger('axiolabajax.access_denied');
                 } else {
-                    self.notify(4, 'AjaxResponse : an error occured ');
+                    self.notify(4, ['AjaxResponse : an error occured ']);
                 }
                 $(document).trigger('axiolabajax.error');
             },
