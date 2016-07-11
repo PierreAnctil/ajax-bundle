@@ -12,11 +12,23 @@ var AjaxResponse = function(){
             async: true,
             success: function(response)
             {
-                response = JSON.parse(response);
-                self.manageResponse(response, callback);
+                if (typeof response == 'string' && response.indexOf('_sign_|_in_') > -1) {
+                    $(document).trigger('axiolabajax.login_required');
+                } else {
+                    response = JSON.parse(response);
+                    self.manageResponse(response, callback);
+                }
+                $(document).trigger('axiolabajax.success');
             },
-            error: function(response) {
-                self.notify(4, 'AjaxResponse : an error occured ');
+            error: function(xhr) {
+                if (xhr.status == 403) {
+                    $(document).trigger('axiolabajax.access_denied');
+                } else {
+                    self.notify(4, ['AjaxResponse : an error occured ']);
+                }
+                $(document).trigger('axiolabajax.error');
+            }, complete: function(xhr) {
+                $(document).trigger('axiolabajax.complete');
             }
         });
     };
@@ -81,8 +93,24 @@ var AjaxResponse = function(){
             url: $form.attr('action'),
             data: values,
             success:    function(response) {
-                response = JSON.parse(response);
-                self.manageResponse(response, callback);
+                if (typeof response == 'string' && response.indexOf('_sign_|_in_') > -1) {
+                    $(document).trigger('axiolabajax.login_required');
+                } else {
+                    response = JSON.parse(response);
+                    self.manageResponse(response, callback);
+                }
+                $(document).trigger('axiolabajax.success');
+            },
+            error: function(xhr) {
+                if (xhr.status == 403) {
+                    $(document).trigger('axiolabajax.access_denied');
+                } else {
+                    self.notify(4, 'AjaxResponse : an error occured ');
+                }
+                $(document).trigger('axiolabajax.error');
+            },
+            complete: function(xhr) {
+                $(document).trigger('axiolabajax.complete');
             }
         });
     };
