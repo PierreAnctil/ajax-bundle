@@ -23,7 +23,7 @@ var AjaxResponse = function(){
                 self.notify(4, 'AjaxResponse : an error occured ');
             },
             complete: function(xhr, textStatus) {
-                if (xhr === 403) {
+                if (xhr == 403) {
                     $(document).trigger('axiolabajax.access_denied');
                 }
             } 
@@ -101,7 +101,7 @@ var AjaxResponse = function(){
                 self.notify(4, 'AjaxResponse : an error occured ');
             },
             complete: function(xhr, textStatus) {
-                if (xhr === 403) {
+                if (xhr == 403) {
                     $(document).trigger('axiolabajax.access_denied');
                 }
             }
