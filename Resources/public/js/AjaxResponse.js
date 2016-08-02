@@ -21,10 +21,7 @@ var AjaxResponse = function(){
                 $(document).trigger('axiolabajax.success');
             },
             error: function(xhr) {
-                if (xhr.status == 403) {
-                    $(document).trigger('axiolabajax.access_denied');
-                }
-                $(document).trigger('axiolabajax.error', [xhr]);
+                self.ajaxError(xhr);
             }, complete: function(xhr) {
                 $(document).trigger('axiolabajax.complete');
             }
@@ -100,15 +97,21 @@ var AjaxResponse = function(){
                 $(document).trigger('axiolabajax.success');
             },
             error: function(xhr) {
-                if (xhr.status == 403) {
-                    $(document).trigger('axiolabajax.access_denied');
-                }
-                $(document).trigger('axiolabajax.error', [xhr]);
+                self.ajaxError(xhr);
             },
             complete: function(xhr) {
                 $(document).trigger('axiolabajax.complete');
             }
         });
+    };
+    
+    self.ajaxError = function(xhr) {
+        if (xhr.status == 403) {
+            $(document).trigger('axiolabajax.access_denied');
+        } else if (xhr.status != 0) {
+            self.notify(4, 'AjaxResponse : an error occured ');
+            $(document).trigger('axiolabajax.error');
+        }
     };
 };
 
