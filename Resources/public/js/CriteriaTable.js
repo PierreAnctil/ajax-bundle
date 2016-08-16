@@ -166,7 +166,7 @@ var CriteriaTable = function(){
                     self.container.html(response.template);
                     self.reinitialize();
                     if (triggerEvents) {
-                        self.container.trigger('axiolab.table.afterReload');
+                        self.container.trigger('axiolab.table.afterReload', [response]);
                     }
                 } else {
                     var formId = '#' +self.filters_form.attr('id');
