@@ -1,3 +1,6 @@
+/// <reference path="./AjaxResponse.ts" />
+
+
 var CriteriaTable = function(){
     var self = this;
 
@@ -191,7 +194,7 @@ var CriteriaTable = function(){
     };
 
     self.sortEvents = function () {
-        $("#" + self.container.attr('id') + " .sort-column .pointer").on("click", function(){
+        $(`#${self.container.attr('id')} .sort-column .pointer`).on("click", function(){
             var $td = $(this).parent();
 
             var newSort = 'asc';
@@ -210,7 +213,7 @@ var CriteriaTable = function(){
 
     self.addPointers = function() {
         $('.sort-column' , self.table).each(function(idx) {
-            $(this).html('<span class="pointer">'+$(this).html()+'</span>');
+            $(this).html(`<span class="pointer">${$(this).html()}</span>`);
         });
     };
 };

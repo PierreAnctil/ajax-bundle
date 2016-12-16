@@ -1,3 +1,10 @@
+**pré-requis :**
+
+install typescript & tools
+
+> npm install -g typescript typings
+
+
 **development :**
 
 execute 
@@ -15,3 +22,8 @@ execute
 > tsc 
 
 in this folder to produce js files
+
+
+**tests :**
+
+open *test.html* in a browser

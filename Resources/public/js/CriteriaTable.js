@@ -1,3 +1,4 @@
+/// <reference path="./AjaxResponse.ts" />
 var CriteriaTable = function () {
     var self = this;
     self.container = null;
@@ -173,7 +174,7 @@ var CriteriaTable = function () {
     };
     self.addPointers = function () {
         $('.sort-column', self.table).each(function (idx) {
-            $(this).html('<span class="pointer">' + $(this).html() + '</span>');
+            $(this).html("<span class=\"pointer\">" + $(this).html() + "</span>");
         });
     };
 };

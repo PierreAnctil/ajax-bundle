@@ -4,25 +4,44 @@
  * @class AjaxResponse
  */
 var AjaxResponse = (function () {
-    function AjaxResponse() {
+    function AjaxResponse(usePromise) {
+        if (usePromise === void 0) { usePromise = false; }
+        this.usePromise = usePromise;
     }
     /**
      * Execute an ajax request
      *
-     * @template T - the return type of the ajax request
+     * @template T
      * @param {any} route
      * @param {any} data
-     * @param {Function} [callback]
-     * @param {string} [method='POST']
-     * @returns {JQueryPromise<T>}
+     * @param {(AjaxOptions|Function)} [callbackOrOptions]
+     * @param {(Method|AjaxOptions)} [methodOrOptions]
+     * @returns {(JQueryPromise<T> | JQueryXHR)}
      *
      * @memberOf AjaxResponse
      */
-    AjaxResponse.prototype.request = function (route, data, callback, method) {
+    AjaxResponse.prototype.request = function (route, data, callbackOrOptions, methodOrOptions) {
         var _this = this;
-        if (method === void 0) { method = 'POST'; }
-        var deferred = $.Deferred();
-        $.ajax({
+        var callback;
+        var options;
+        var deferred;
+        var method = 'POST';
+        if (typeof callbackOrOptions === 'function') {
+            // callback mode
+            callback = callbackOrOptions;
+        }
+        else {
+            // promise mode
+            options = callbackOrOptions || {};
+            method = options.method || method;
+        }
+        if (typeof (methodOrOptions) === 'string') {
+            method = methodOrOptions || method;
+        }
+        if (this.usePromise) {
+            deferred = $.Deferred();
+        }
+        var xhr = $.ajax({
             type: method,
             url: route,
             data: data,
@@ -38,41 +57,57 @@ var AjaxResponse = (function () {
                         response = JSON.parse(response);
                     }
                     _this.manageResponse(response, callback);
-                    deferred.resolve(response);
+                    if (_this.usePromise) {
+                        deferred.resolve(response);
+                    }
                 }
                 $(document).trigger('axiolabajax.success');
             },
             error: function (xhr) {
                 _this.ajaxError(xhr);
-                deferred.reject(xhr);
+                if (_this.usePromise) {
+                    deferred.reject(xhr);
+                }
             },
             complete: function (xhr) {
                 $(document).trigger('axiolabajax.complete');
             }
         });
-        return deferred.promise();
+        return this.usePromise ? deferred.promise() : xhr;
     };
     /**
      * Submit a form via ajax
      *
-     * @template T - the return type of the ajax request
+     * @template T
      * @param {JQuery} $form
-     * @param {Function} callback
-     * @param {any[]} additionalValues
-     * @returns {JQueryPromise<T>}
+     * @param {(Function|any)} [callbackOrValues]
+     * @param {*} [additionalValues]
+     * @returns {(JQueryPromise<T> | JQueryXHR)}
      *
      * @memberOf AjaxResponse
      */
-    AjaxResponse.prototype.submitForm = function ($form, callback, additionalValues) {
+    AjaxResponse.prototype.submitForm = function ($form, callbackOrValues, additionalValues) {
         var route = $form.attr('action');
         var type = $form.attr('method');
+        var callback;
+        if (typeof callbackOrValues === 'function') {
+            callback = callbackOrValues;
+        }
+        else {
+            additionalValues = callbackOrValues;
+        }
         var values = this.serialize($form);
         if (additionalValues) {
             additionalValues.forEach(function (value, index) {
                 values[index] = value;
             });
         }
-        return this.request(route, values, callback, type);
+        if (this.usePromise) {
+            return this.request(route, values, { method: type });
+        }
+        else {
+            return this.request(route, values, callback, { method: type });
+        }
     };
     /**
      * extract the form's content and make an object out of it
@@ -139,11 +174,27 @@ var AjaxResponse = (function () {
     AjaxResponse.prototype.redirect = function (url) {
         window.location.href = url;
     };
+    /**
+     * delete action via ajax
+     *
+     * @template T
+     * @param {string} route
+     * @param {*} data
+     * @param {Function} [callback]
+     * @returns {(JQueryPromise<T> | JQueryXHR)}
+     *
+     * @memberOf AjaxResponse
+     */
     AjaxResponse.prototype.delete = function (route, data, callback) {
-        return this.request(route, data, callback, "DELETE");
+        if (this.usePromise) {
+            return this.request(route, data, { method: 'DELETE' });
+        }
+        else {
+            return this.request(route, data, callback, { method: 'DELETE' });
+        }
     };
     AjaxResponse.prototype.ajaxError = function (xhr) {
-        if (xhr.status == 403) {
+        if (xhr.status == 403 /* forbidden */) {
             $(document).trigger('axiolabajax.access_denied');
         }
         else if (xhr.status != 0) {

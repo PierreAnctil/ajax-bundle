@@ -5,6 +5,11 @@
         "noImplicitAny": false,
         "sourceMap": false,
         "forceConsistentCasingInFileNames": true,
-        "charset": "utf-8"
-    }
+        "declaration": true,
+        "charset": "utf-8",
+        "declarationDir": "declarations"
+    },
+    "exclude": [
+        "declarations"
+    ]
 }

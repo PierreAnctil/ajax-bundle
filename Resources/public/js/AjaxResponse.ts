@@ -9,6 +9,12 @@ const enum RequestStatus{
     error
 } 
 
+type Method = 'POST' | 'GET' | 'DELETE' | 'PUT';
+
+interface AjaxOptions{
+    method?: Method;
+}
+
 /**
  * Ajax requests management
  * 
@@ -16,23 +22,50 @@ const enum RequestStatus{
  */
 class AjaxResponse{
 
+    constructor(
+        public usePromise = false
+    ) {
+    }
+
+    
+    request<T>(route, data, options: AjaxOptions): JQueryPromise<T>;
+    request<T>(route, data, callback?: Function, methodOrOptions?: Method|AjaxOptions): JQueryXHR;
     /**
      * Execute an ajax request
      * 
-     * @template T - the return type of the ajax request
+     * @template T
      * @param {any} route
      * @param {any} data
-     * @param {Function} [callback]
-     * @param {string} [method='POST']
-     * @returns {JQueryPromise<T>}
+     * @param {(AjaxOptions|Function)} [callbackOrOptions]
+     * @param {(Method|AjaxOptions)} [methodOrOptions]
+     * @returns {(JQueryPromise<T> | JQueryXHR)}
      * 
      * @memberOf AjaxResponse
      */
-    request<T>(route, data, callback?: Function, method = 'POST'): JQueryPromise<T> {
+    request<T>(route, data, callbackOrOptions?: AjaxOptions|Function, methodOrOptions?: Method|AjaxOptions): JQueryPromise<T> | JQueryXHR {
+        let callback: Function;
+        let options: AjaxOptions;
+        let deferred : JQueryDeferred<T>;
+        let method : Method = 'POST';
 
-        let deferred = $.Deferred<T>();
+        if(typeof callbackOrOptions === 'function'){
+            // callback mode
+            callback = callbackOrOptions;
+        } else {
+            // promise mode
+            options = callbackOrOptions || {};
+            method = options.method || method;
+        }
 
-        $.ajax({
+        if(typeof(methodOrOptions) === 'string'){
+            method = methodOrOptions || method;
+        }
+
+        if(this.usePromise){
+            deferred = $.Deferred<T>();
+        }
+
+        var xhr = $.ajax({
             type: method,
             url: route,
             data: data,
@@ -48,37 +81,54 @@ class AjaxResponse{
                     }
                     
                     this.manageResponse(response, callback);
-                    deferred.resolve(<T>response);
+                    if(this.usePromise){
+                        deferred.resolve(<T>response);
+                    }
                 }
                 $(document).trigger('axiolabajax.success');
             },
             error: (xhr: XMLHttpRequest) => {
                 this.ajaxError(xhr);
-                deferred.reject(xhr);
+                if(this.usePromise){
+                    deferred.reject(xhr);
+                }
             }, 
             complete: (xhr: XMLHttpRequest) => {
                 $(document).trigger('axiolabajax.complete');
             }
         });
 
-        return deferred.promise();
+        return this.usePromise ? deferred.promise() : xhr;
     }
 
 
+
+    
+    submitForm<T>($form: JQuery, additionalValues?: any[]|any): JQueryPromise<T>;
+    submitForm<T>($form: JQuery, callback?: Function, additionalValues?: any[]|any): JQueryXHR;
+
+    
     /**
      * Submit a form via ajax
      * 
-     * @template T - the return type of the ajax request
+     * @template T
      * @param {JQuery} $form
-     * @param {Function} callback
-     * @param {any[]} additionalValues
-     * @returns {JQueryPromise<T>}
+     * @param {(Function|any)} [callbackOrValues]
+     * @param {*} [additionalValues]
+     * @returns {(JQueryPromise<T> | JQueryXHR)}
      * 
      * @memberOf AjaxResponse
      */
-    submitForm<T>($form: JQuery, callback: Function, additionalValues: any[]): JQueryPromise<T> {
+    submitForm<T>($form: JQuery, callbackOrValues?: Function|any, additionalValues?: any): JQueryPromise<T> | JQueryXHR {
         let route = $form.attr('action');
-        let type = $form.attr('method');
+        let type = <Method>$form.attr('method');
+        let callback: Function;
+
+        if(typeof callbackOrValues === 'function'){
+            callback = callbackOrValues;
+        } else {
+            additionalValues = callbackOrValues;
+        }
 
         let values = this.serialize($form);
         if (additionalValues){
@@ -87,7 +137,11 @@ class AjaxResponse{
             });
         }
 
-        return this.request<T>(route, values, callback, type);
+        if(this.usePromise){
+            return this.request<T>(route, values, {method: type});
+        } else {
+            return this.request<T>(route, values, callback, {method: type});
+        }
     }
 
     
@@ -165,8 +219,27 @@ class AjaxResponse{
         window.location.href = url;
     }
 
-    delete<T>(route: string, data: any, callback?: Function): JQueryPromise<T> {
-        return this.request<T>(route, data, callback, "DELETE");
+    
+    delete<T>(route: string, data: any): JQueryPromise<T>;
+    delete<T>(route: string, data: any, callback?: Function): JQueryXHR;
+    
+    /**
+     * delete action via ajax
+     * 
+     * @template T
+     * @param {string} route
+     * @param {*} data
+     * @param {Function} [callback]
+     * @returns {(JQueryPromise<T> | JQueryXHR)}
+     * 
+     * @memberOf AjaxResponse
+     */
+    delete<T>(route: string, data: any, callback?: Function): JQueryPromise<T> | JQueryXHR {
+        if(this.usePromise){
+            return this.request<T>(route, data, {method: 'DELETE'});            
+        } else {
+            return this.request<T>(route, data, callback, {method: 'DELETE'});
+        }
     }
     
     ajaxError(xhr) {
@@ -180,5 +253,4 @@ class AjaxResponse{
     
 }
 
-var AxiolabAjax = new AjaxResponse();
-
+let AxiolabAjax = new AjaxResponse();
