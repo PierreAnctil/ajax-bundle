@@ -78,9 +78,9 @@ var AjaxResponse = function(){
     self.submitForm = function($form, callback, additionalValues) {
         var values = {};
         if (additionalValues){
-            additionalValues.forEach(function(i, field){
-                values[i] = field;
-            });
+           $.each(additionalValues, function(key, field){
+               values.key = field;
+           });
         }
 
         $form.ajaxSubmit({
