@@ -38,6 +38,9 @@ var urlTest = 'https://httpbin.org/';
 $(document).on('axiolabajax.request_locked', function () {
     console.log('cb - OK : failed because of multiple requests');
 });
+$(document).on('axiolabajax.error', function () {
+    console.log('request error');
+});
 AxiolabAjax
     .request(urlTest + 'get', {}, function (response) {
     console.log("cb - OK callback GET " + response.url);
@@ -52,10 +55,7 @@ function withLockTest() {
         console.log("cb - OK promise locked POST " + response.url);
         AxiolabAjax.request(urlTest + 'post', {}, function (response) {
             console.log("cb - OK promise after locked POST " + response.url);
-            finishedCbs++;
-            if (finishedCbs === 2) {
-                testPromise();
-            }
+            testPromise();
         });
     }, {
         method: 'POST',
@@ -63,14 +63,8 @@ function withLockTest() {
     });
     // relancer
     AxiolabAjax.request(urlTest + 'post', {}, function (response) {
+        // should not happen
         console.log("cb - OK callback POST " + response.url);
-        finishedCbs++;
-        if (finishedCbs === 2) {
-            testPromise();
-        }
-    }, {
-        method: 'POST',
-        withLock: true
     });
 }
 function testPromise() {

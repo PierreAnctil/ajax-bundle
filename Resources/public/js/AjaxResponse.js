@@ -32,34 +32,37 @@ var AjaxResponse = (function () {
         var deferred;
         var method = 'POST';
         var withLock = false;
+        var setOptions = function (ajaxOptions) {
+            var computedOptions = $.extend({}, _this.defaultAjaxOptions);
+            $.extend(computedOptions, ajaxOptions);
+            method = ajaxOptions.method || method;
+            withLock = ajaxOptions.withLock === true;
+        };
         if (typeof callbackOrOptions === 'function') {
             // callback mode
             callback = callbackOrOptions;
         }
         else if (callbackOrOptions) {
-            // promise mode
-            var allOptions = $.extend(options, this.defaultAjaxOptions);
-            options = callbackOrOptions;
-            method = options.method || method;
-            withLock = options.withLock === true;
+            setOptions(callbackOrOptions);
         }
         if (typeof (methodOrOptions) === 'string') {
             method = methodOrOptions || method;
         }
+        else if (methodOrOptions) {
+            setOptions(methodOrOptions);
+        }
         if (this.usePromise) {
             deferred = $.Deferred();
         }
-        else if (methodOrOptions) {
-            // promise mode
-            var allOptions = $.extend(options, this.defaultAjaxOptions);
-            options = methodOrOptions;
-            method = options.method || method;
-            withLock = options.withLock === true;
-        }
         if (this.isLocked) {
-            this.ajaxError();
+            // another request set up the lock
             if (this.usePromise) {
                 deferred.reject();
+                return deferred.promise();
+            }
+            else {
+                this.ajaxError();
+                return;
             }
         }
         this.isLocked = withLock;
@@ -69,6 +72,9 @@ var AjaxResponse = (function () {
             data: data,
             cache: false,
             success: function (response) {
+                if (withLock) {
+                    _this.isLocked = false;
+                }
                 if (typeof response == 'string' && response.indexOf('_sign_|_in_') > -1) {
                     // user not logged
                     $(document).trigger('axiolabajax.login_required');
@@ -114,7 +120,7 @@ var AjaxResponse = (function () {
      *
      * @memberOf AjaxResponse
      */
-    AjaxResponse.prototype.submitForm = function ($form, callbackOrValues, additionalValues) {
+    AjaxResponse.prototype.submitForm = function ($form, callbackOrValues, additionalValuesOrOptions, options) {
         var route = $form.attr('action');
         var type = $form.attr('method');
         var callback;
@@ -122,19 +128,25 @@ var AjaxResponse = (function () {
             callback = callbackOrValues;
         }
         else {
-            additionalValues = callbackOrValues;
+            additionalValuesOrOptions = callbackOrValues;
         }
+        if (!callback) {
+            options = additionalValuesOrOptions;
+        }
+        var computedOptions = $.extend({}, this.defaultAjaxOptions);
+        options.method = type;
+        $.extend(computedOptions, options);
         var values = this.serialize($form);
-        if (additionalValues) {
-            additionalValues.forEach(function (value, index) {
-                values[index] = value;
+        if (additionalValuesOrOptions) {
+            $.each(additionalValuesOrOptions, function (key, value) {
+                values[key] = value;
             });
         }
         if (this.usePromise) {
-            return this.request(route, values, { method: type });
+            return this.request(route, values, computedOptions);
         }
         else {
-            return this.request(route, values, callback, { method: type });
+            return this.request(route, values, callback, computedOptions);
         }
     };
     /**

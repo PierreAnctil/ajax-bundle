@@ -56,43 +56,42 @@ class AjaxResponse{
         let deferred : JQueryDeferred<T>;
         let method : Method = 'POST';
         let withLock = false;
+        
+        let setOptions = (ajaxOptions: AjaxOptions) => {
+            let computedOptions = <AjaxOptions>$.extend({}, this.defaultAjaxOptions);
+            $.extend(computedOptions, ajaxOptions);
+
+            method = ajaxOptions.method || method;
+            withLock = ajaxOptions.withLock === true;
+        }
 
         if(typeof callbackOrOptions === 'function'){
             // callback mode
             callback = callbackOrOptions;
         } else if(callbackOrOptions){
-            // promise mode
-
-            let allOptions = $.extend(options, this.defaultAjaxOptions);
-
-            options = <AjaxOptions>callbackOrOptions;
-            method = options.method || method;
-            withLock = options.withLock === true;
+            setOptions(<AjaxOptions>callbackOrOptions);
         }
 
         if(typeof(methodOrOptions) === 'string'){
             method = methodOrOptions || method;
+        } else if(methodOrOptions){
+            setOptions(<AjaxOptions>methodOrOptions);
         }
 
         if(this.usePromise){
             deferred = $.Deferred<T>();
-        } else if(methodOrOptions){
-            // promise mode
-
-            let allOptions = $.extend(options, this.defaultAjaxOptions);
-
-            options = <AjaxOptions>methodOrOptions;
-            method = options.method || method;
-            withLock = options.withLock === true;
         }
 
-        
-
         if(this.isLocked){
-            this.ajaxError();
+            // another request set up the lock
             if(this.usePromise){
                 deferred.reject();
+                return deferred.promise();
+            } else {
+                this.ajaxError();
+                return;
             }
+            
         }
 
         this.isLocked = withLock;
@@ -103,6 +102,9 @@ class AjaxResponse{
             data: data,
             cache: false,
             success: (response: T | string) => {
+                if(withLock){
+                    this.isLocked = false;
+                }
                 if (typeof response == 'string' && (<string>response).indexOf('_sign_|_in_') > -1) {
                     // user not logged
                     $(document).trigger('axiolabajax.login_required');
@@ -142,8 +144,8 @@ class AjaxResponse{
 
 
     
-    submitForm<T>($form: JQuery, additionalValues?: any[]|any): JQueryPromise<T>;
-    submitForm<T>($form: JQuery, callback?: Function, additionalValues?: any[]|any): JQueryXHR;
+    submitForm<T>($form: JQuery, additionalValues?: any[]|any, options?: AjaxOptions): JQueryPromise<T>;
+    submitForm<T>($form: JQuery, callback?: Function, additionalValues?: any[]|any, options?: AjaxOptions): JQueryXHR;
 
     
     /**
@@ -157,7 +159,12 @@ class AjaxResponse{
      * 
      * @memberOf AjaxResponse
      */
-    submitForm<T>($form: JQuery, callbackOrValues?: Function|any, additionalValues?: any): JQueryPromise<T> | JQueryXHR {
+    submitForm<T>(
+        $form: JQuery, 
+        callbackOrValues?: Function|any, 
+        additionalValuesOrOptions?: any|AjaxOptions, 
+        options?: AjaxOptions
+    ): JQueryPromise<T> | JQueryXHR {
         let route = $form.attr('action');
         let type = <Method>$form.attr('method');
         let callback: Function;
@@ -165,20 +172,29 @@ class AjaxResponse{
         if(typeof callbackOrValues === 'function'){
             callback = callbackOrValues;
         } else {
-            additionalValues = callbackOrValues;
+            additionalValuesOrOptions = callbackOrValues;
         }
 
+        if(!callback){
+            options = <AjaxOptions>additionalValuesOrOptions;
+        }
+
+        let computedOptions = <AjaxOptions>$.extend({}, this.defaultAjaxOptions);
+        options.method = type;
+        $.extend(computedOptions, options);
+
+
         let values = this.serialize($form);
-        if (additionalValues){
-            additionalValues.forEach((value, index) => {
-                values[index] = value;
-            });
+        if (additionalValuesOrOptions){
+            $.each(additionalValuesOrOptions, (key, value) => {
+                values[key] = value;
+            });   
         }
 
         if(this.usePromise){
-            return this.request<T>(route, values, {method: type});
+            return this.request<T>(route, values, computedOptions);
         } else {
-            return this.request<T>(route, values, callback, {method: type});
+            return this.request<T>(route, values, callback, computedOptions);
         }
     }
 

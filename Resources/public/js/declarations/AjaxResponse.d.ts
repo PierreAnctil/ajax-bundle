@@ -24,8 +24,8 @@ declare class AjaxResponse {
     constructor(usePromise?: boolean);
     request<T>(route: any, data: any, options: AjaxOptions): JQueryPromise<T>;
     request<T>(route: any, data: any, callback?: Function, methodOrOptions?: Method | AjaxOptions): JQueryXHR;
-    submitForm<T>($form: JQuery, additionalValues?: any[] | any): JQueryPromise<T>;
-    submitForm<T>($form: JQuery, callback?: Function, additionalValues?: any[] | any): JQueryXHR;
+    submitForm<T>($form: JQuery, additionalValues?: any[] | any, options?: AjaxOptions): JQueryPromise<T>;
+    submitForm<T>($form: JQuery, callback?: Function, additionalValues?: any[] | any, options?: AjaxOptions): JQueryXHR;
     /**
      * extract the form's content and make an object out of it
      *

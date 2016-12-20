@@ -9,6 +9,10 @@ $(document).on('axiolabajax.request_locked', () => {
     console.log('cb - OK : failed because of multiple requests');
 });
 
+$(document).on('axiolabajax.error', () => {
+    console.log('request error');
+});
+
 
 AxiolabAjax
     .request<any> (urlTest + 'get', {}, response => {
@@ -30,10 +34,7 @@ function withLockTest(){
             console.log(`cb - OK promise locked POST ${response.url}`);
             AxiolabAjax.request<any>(urlTest + 'post', {}, response => {
                 console.log(`cb - OK promise after locked POST ${response.url}`);
-                finishedCbs++;
-                if(finishedCbs === 2){
-                    testPromise();
-                }
+                testPromise();
             });
         },
         {
@@ -44,14 +45,8 @@ function withLockTest(){
 
     // relancer
     AxiolabAjax.request<any>(urlTest + 'post', {}, response => {
+        // should not happen
         console.log(`cb - OK callback POST ${response.url}`);
-        finishedCbs++;
-        if(finishedCbs === 2){
-            testPromise();
-        }
-    }, {
-        method: 'POST',
-        withLock: true
     });
 }
 
