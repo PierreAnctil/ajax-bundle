@@ -35,24 +35,70 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var urlTest = 'https://httpbin.org/';
-AxiolabAjax.usePromise = true;
+$(document).on('axiolabajax.request_locked', function () {
+    console.log('cb - OK : failed because of multiple requests');
+});
 AxiolabAjax
     .request(urlTest + 'get', {}, function (response) {
-    console.log("OK callback GET " + response.url);
+    console.log("cb - OK callback GET " + response.url);
     AxiolabAjax.request(urlTest + 'post', {}, function (response) {
-        console.log("OK callback POST " + response.url);
+        console.log("cb - OK callback POST " + response.url);
+        withLockTest();
     }, 'POST');
 }, 'GET');
-AxiolabAjax
-    .request(urlTest + 'get', {}, { method: 'GET' })
-    .then(function (response) {
-    console.log("OK promise GET " + response.url);
-    return AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST' });
-})
-    .then(function (response) {
-    return console.log("OK promise POST " + response.url);
-});
-function run() {
+var finishedCbs = 0;
+function withLockTest() {
+    AxiolabAjax.request(urlTest + 'post', {}, function (response) {
+        console.log("cb - OK promise locked POST " + response.url);
+        AxiolabAjax.request(urlTest + 'post', {}, function (response) {
+            console.log("cb - OK promise after locked POST " + response.url);
+            finishedCbs++;
+            if (finishedCbs === 2) {
+                testPromise();
+            }
+        });
+    }, {
+        method: 'POST',
+        withLock: true
+    });
+    // relancer
+    AxiolabAjax.request(urlTest + 'post', {}, function (response) {
+        console.log("cb - OK callback POST " + response.url);
+        finishedCbs++;
+        if (finishedCbs === 2) {
+            testPromise();
+        }
+    }, {
+        method: 'POST',
+        withLock: true
+    });
+}
+function testPromise() {
+    AxiolabAjax.usePromise = true;
+    return AxiolabAjax
+        .request(urlTest + 'get', {}, { method: 'GET' })
+        .then(function (response) {
+        console.log("prom - OK promise GET " + response.url);
+        return AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST' });
+    })
+        .then(function (response) {
+        console.log("prom - OK promise POST " + response.url);
+        var prom = AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST', withLock: true });
+        AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST' }).fail(function () {
+            return console.log('prom - OK : failed because of multiple requests');
+        });
+        return prom;
+    })
+        .then(function (response) {
+        console.log("prom - OK promise locked POST " + response.url);
+        return AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST' });
+    })
+        .then(function (response) {
+        console.log("prom - OK promise after locked POST " + response.url);
+    })
+        .then(function () { return testPromiseAsync(); });
+}
+function testPromiseAsync() {
     return __awaiter(this, void 0, void 0, function () {
         var response;
         return __generator(this, function (_a) {
@@ -60,14 +106,46 @@ function run() {
                 case 0: return [4 /*yield*/, AxiolabAjax.request(urlTest + 'get', {}, { method: 'GET' })];
                 case 1:
                     response = _a.sent();
-                    console.log("OK async GET " + response.url);
+                    console.log("async - OK async GET " + response.url);
                     return [4 /*yield*/, AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST' })];
                 case 2:
                     response = _a.sent();
-                    console.log("OK async POST " + response.url);
+                    console.log("async - OK async POST " + response.url);
+                    return [4 /*yield*/, runWithLock()];
+                case 3:
+                    response = _a.sent();
+                    console.log("async - OK promise locked POST " + response.url);
+                    return [4 /*yield*/, AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST' })];
+                case 4:
+                    response = _a.sent();
+                    console.log("async - OK promise after locked POST " + response.url);
                     return [2 /*return*/];
             }
         });
     });
 }
-run();
+function runWithLock() {
+    return __awaiter(this, void 0, void 0, function () {
+        var prom, a, ex_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    prom = AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST', withLock: true });
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, AxiolabAjax.request(urlTest + 'post', {}, { method: 'POST' })];
+                case 2:
+                    _a.sent();
+                    a = 1;
+                    return [3 /*break*/, 4];
+                case 3:
+                    ex_1 = _a.sent();
+                    console.log('async - OK : failed because of multiple requests');
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/, prom];
+            }
+        });
+    });
+}
+//# sourceMappingURL=AjaxResponse.test.js.map

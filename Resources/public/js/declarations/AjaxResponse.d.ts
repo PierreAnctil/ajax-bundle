@@ -10,6 +10,7 @@ declare const enum RequestStatus {
 declare type Method = 'POST' | 'GET' | 'DELETE' | 'PUT';
 interface AjaxOptions {
     method?: Method;
+    withLock?: boolean;
 }
 /**
  * Ajax requests management
@@ -18,6 +19,8 @@ interface AjaxOptions {
  */
 declare class AjaxResponse {
     usePromise: boolean;
+    private defaultAjaxOptions;
+    isLocked: boolean;
     constructor(usePromise?: boolean);
     request<T>(route: any, data: any, options: AjaxOptions): JQueryPromise<T>;
     request<T>(route: any, data: any, callback?: Function, methodOrOptions?: Method | AjaxOptions): JQueryXHR;
@@ -38,6 +41,6 @@ declare class AjaxResponse {
     redirect(url: string): void;
     delete<T>(route: string, data: any): JQueryPromise<T>;
     delete<T>(route: string, data: any, callback?: Function): JQueryXHR;
-    ajaxError(xhr: any): void;
+    ajaxError(xhr?: XMLHttpRequest): void;
 }
 declare let AxiolabAjax: AjaxResponse;

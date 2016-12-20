@@ -13,6 +13,7 @@ type Method = 'POST' | 'GET' | 'DELETE' | 'PUT';
 
 interface AjaxOptions{
     method?: Method;
+    withLock?: boolean;
 }
 
 /**
@@ -22,8 +23,15 @@ interface AjaxOptions{
  */
 class AjaxResponse{
 
+    private defaultAjaxOptions: AjaxOptions = {
+        method: 'POST',
+        withLock: false
+    }
+
+    public isLocked = false;
+
     constructor(
-        public usePromise = false
+        public usePromise = false,
     ) {
     }
 
@@ -47,14 +55,19 @@ class AjaxResponse{
         let options: AjaxOptions;
         let deferred : JQueryDeferred<T>;
         let method : Method = 'POST';
+        let withLock = false;
 
         if(typeof callbackOrOptions === 'function'){
             // callback mode
             callback = callbackOrOptions;
-        } else {
+        } else if(callbackOrOptions){
             // promise mode
-            options = callbackOrOptions || {};
+
+            let allOptions = $.extend(options, this.defaultAjaxOptions);
+
+            options = <AjaxOptions>callbackOrOptions;
             method = options.method || method;
+            withLock = options.withLock === true;
         }
 
         if(typeof(methodOrOptions) === 'string'){
@@ -63,7 +76,26 @@ class AjaxResponse{
 
         if(this.usePromise){
             deferred = $.Deferred<T>();
+        } else if(methodOrOptions){
+            // promise mode
+
+            let allOptions = $.extend(options, this.defaultAjaxOptions);
+
+            options = <AjaxOptions>methodOrOptions;
+            method = options.method || method;
+            withLock = options.withLock === true;
         }
+
+        
+
+        if(this.isLocked){
+            this.ajaxError();
+            if(this.usePromise){
+                deferred.reject();
+            }
+        }
+
+        this.isLocked = withLock;
 
         var xhr = $.ajax({
             type: method,
@@ -82,6 +114,9 @@ class AjaxResponse{
                     
                     this.manageResponse(response, callback);
                     if(this.usePromise){
+                        if(!deferred){
+                            throw `no deferred object available. Try not to mix usePromise options values in parallel requests`;
+                        }
                         deferred.resolve(<T>response);
                     }
                 }
@@ -95,6 +130,9 @@ class AjaxResponse{
             }, 
             complete: (xhr: XMLHttpRequest) => {
                 $(document).trigger('axiolabajax.complete');
+                if(withLock){
+                    this.isLocked = false;
+                }
             }
         });
 
@@ -242,13 +280,16 @@ class AjaxResponse{
         }
     }
     
-    ajaxError(xhr) {
-        if (xhr.status == HttpStatus.forbidden) {
+    ajaxError(xhr?: XMLHttpRequest) {
+        if(!xhr){
+            // request locked
+            $(document).trigger('axiolabajax.request_locked');
+        } else if (xhr.status == HttpStatus.forbidden) {
             $(document).trigger('axiolabajax.access_denied');
         } else if (xhr.status != 0) {
             this.notify(RequestStatus.error, 'AjaxResponse : an error occured ');
             $(document).trigger('axiolabajax.error');
-        }
+        } 
     }
     
 }

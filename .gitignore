@@ -49,3 +49,8 @@
 
 #types definitions files (generated)
 /Resources/public/js/typings
+/Resources/public/js/*.js.map
+/Resources/public/js/declarations
+
+#editors files
+.vscode-upload.json
