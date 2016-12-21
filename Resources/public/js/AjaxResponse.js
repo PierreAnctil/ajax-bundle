@@ -124,24 +124,21 @@ var AjaxResponse = (function () {
         var route = $form.attr('action');
         var type = $form.attr('method');
         var callback;
+        var additionalValues;
         if (typeof callbackOrValues === 'function') {
             callback = callbackOrValues;
+            additionalValues = additionalValuesOrOptions;
         }
         else {
-            additionalValuesOrOptions = callbackOrValues;
-        }
-        if (!callback) {
+            additionalValues = callbackOrValues;
             options = additionalValuesOrOptions;
         }
         var computedOptions = $.extend({}, this.defaultAjaxOptions);
-        options.method = type;
+        computedOptions.method = type;
         $.extend(computedOptions, options);
+        // serialize form and add additional values
         var values = this.serialize($form);
-        if (additionalValuesOrOptions) {
-            $.each(additionalValuesOrOptions, function (key, value) {
-                values[key] = value;
-            });
-        }
+        $.extend(values, additionalValues);
         if (this.usePromise) {
             return this.request(route, values, computedOptions);
         }

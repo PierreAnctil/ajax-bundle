@@ -144,8 +144,8 @@ class AjaxResponse{
 
 
     
-    submitForm<T>($form: JQuery, additionalValues?: any[]|any, options?: AjaxOptions): JQueryPromise<T>;
-    submitForm<T>($form: JQuery, callback?: Function, additionalValues?: any[]|any, options?: AjaxOptions): JQueryXHR;
+    submitForm<T>($form: JQuery, additionalValues: any[]|any, options?: AjaxOptions): JQueryPromise<T>;
+    submitForm<T>($form: JQuery, callback: Function, additionalValues: any[]|any, options?: AjaxOptions): JQueryXHR;
 
     
     /**
@@ -168,28 +168,23 @@ class AjaxResponse{
         let route = $form.attr('action');
         let type = <Method>$form.attr('method');
         let callback: Function;
+        let additionalValues: any;
 
         if(typeof callbackOrValues === 'function'){
             callback = callbackOrValues;
+            additionalValues = additionalValuesOrOptions;
         } else {
-            additionalValuesOrOptions = callbackOrValues;
-        }
-
-        if(!callback){
+            additionalValues = callbackOrValues;
             options = <AjaxOptions>additionalValuesOrOptions;
         }
 
         let computedOptions = <AjaxOptions>$.extend({}, this.defaultAjaxOptions);
-        options.method = type;
+        computedOptions.method = type;
         $.extend(computedOptions, options);
 
-
+        // serialize form and add additional values
         let values = this.serialize($form);
-        if (additionalValuesOrOptions){
-            $.each(additionalValuesOrOptions, (key, value) => {
-                values[key] = value;
-            });   
-        }
+        $.extend(values, additionalValues);
 
         if(this.usePromise){
             return this.request<T>(route, values, computedOptions);
