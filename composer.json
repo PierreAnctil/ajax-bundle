@@ -16,10 +16,5 @@
         "psr-4" : {
             "Axiolab\\AjaxBundle\\" : ""
         }
-    },
-    "extra" : {
-        "branch-alias" : {
-            "dev-master" : "master"
-        }
     }
 }
