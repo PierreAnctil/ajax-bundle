@@ -69,7 +69,8 @@ var CriteriaTable = function () {
         var sortDefault = "<span class=\"fa-stack fa-sm pointer sort-icons-wrapper\">\n            <i class=\"fa fa-sort fa-stack-1x\" style=\"color: " + self.passiveSortColor + "\">\n            </i>\n        </span>";
         var $sortDesc = $(sortDefault).append('<i class="fa fa-sort-down fa-stack-1x" style="color: ' + self.activeSortColor + '"></i>');
         var $sortAsc = $(sortDefault).append('<i class="fa fa-sort-up fa-stack-1x" style="color: ' + self.activeSortColor + '"></i>');
-        var sorted_by = self.filters_form.find('.sort-value').val().split(',');
+        var $sortInput = self.filters_form.find('.sort-value');
+        var sorted_by = $sortInput.length > 0 ? val().split(',') : ['',''];
         self.table.find(".sort-column").each(function () {
             $(this).append(sortDefault);
             var $iconWrapper = $(this).find('.sort-icons-wrapper');
