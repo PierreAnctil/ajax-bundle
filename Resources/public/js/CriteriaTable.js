@@ -70,7 +70,7 @@ var CriteriaTable = function () {
         var $sortDesc = $(sortDefault).append('<i class="fa fa-sort-down fa-stack-1x" style="color: ' + self.activeSortColor + '"></i>');
         var $sortAsc = $(sortDefault).append('<i class="fa fa-sort-up fa-stack-1x" style="color: ' + self.activeSortColor + '"></i>');
         var $sortInput = self.filters_form.find('.sort-value');
-        var sorted_by = $sortInput.length > 0 ? val().split(',') : ['',''];
+        var sorted_by = $sortInput.length > 0 ? $sortInput.val().split(',') : ['',''];
         self.table.find(".sort-column").each(function () {
             $(this).append(sortDefault);
             var $iconWrapper = $(this).find('.sort-icons-wrapper');
