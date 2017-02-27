@@ -298,7 +298,7 @@ class AjaxResponse{
         } else if (xhr.status == HttpStatus.forbidden) {
             $(document).trigger('axiolabajax.access_denied');
         } else if (xhr.status != 0) {
-            this.notify(RequestStatus.error, 'AjaxResponse : an error occured ');
+            this.notify(RequestStatus.error, 'AjaxResponse : an error occurred ');
             $(document).trigger('axiolabajax.error');
         } 
     }
