@@ -4,3 +4,5 @@ parameters:
 services:
     axiolab.ajax_handler:
         class: "%axiolab.ajax_handler.class%"
+        arguments:
+            - "@session"
