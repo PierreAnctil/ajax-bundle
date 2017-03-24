@@ -1,0 +1,16 @@
+{#
+    This template must be included in the .criteria-table parent container
+    It needs the following variables to work
+    pageLengths  Array  The available page lengthes
+    bindInput    String The hidden input selector which will get the selected value
+    label        String The translation key can be overriden but must implement the %page_length% parameter
+#}
+
+{% set label = label|default('axiolab.ajax.label.page_length_selector') %}
+<select class="selectpicker page_length_selector" data-container="body" data-bind-input={{bindInput|default('.page-length')}}>
+    {% for length in pageLengths %}
+        <option value="{{length}}" {% if pageLengthSelected == length %}selected{% endif %}>
+            {{ label|trans({'%page_length%': length}) }}
+        </option>
+    {% endfor %}
+</select>
