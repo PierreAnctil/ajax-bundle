@@ -18,6 +18,7 @@ class AjaxResponse extends Response
     protected $data = null;
     protected $options = [];
     protected $removed = false;
+    protected $redirect = false;
 
     /**
      * Gets the value of status.
@@ -27,6 +28,34 @@ class AjaxResponse extends Response
     public function getStatus()
     {
         return $this->status;
+    }
+
+    /**
+     * Gets the literal value of status.
+     *
+     * @return mixed
+     */
+    public function getNotificationStatus()
+    {
+        switch ($this->getStatus()) {
+            case self::STATUS_SUCCESS:
+                $status = 'success';
+                break;
+            case self::STATUS_INFO:
+                $status = 'info';
+                break;
+            case self::STATUS_WARNING:
+                $status = 'warning';
+                break;
+            case self::STATUS_ERROR:
+                $status = 'error';
+                break;
+            default:
+                $status = 'info';
+                break;
+        }
+
+        return $status;
     }
 
     /**
@@ -190,6 +219,30 @@ class AjaxResponse extends Response
     public function setRemoved($removed)
     {
         $this->removed = $removed;
+
+        return $this;
+    }
+
+    /**
+     * Gets the value of redirect.
+     *
+     * @return mixed
+     */
+    public function getRedirect()
+    {
+        return $this->redirect;
+    }
+
+    /**
+     * Sets the value of redirect.
+     *
+     * @param mixed $redirect the redirect
+     *
+     * @return self
+     */
+    public function setRedirect($redirect)
+    {
+        $this->redirect = $redirect;
 
         return $this;
     }
