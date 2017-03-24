@@ -1,0 +1,4 @@
+axiolab:
+    ajax:
+        label:
+            page_length_selector: "Afficher %page_length% résultats par page"

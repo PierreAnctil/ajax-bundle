@@ -160,11 +160,20 @@ var CriteriaTable = function () {
         });
     };
     self.paginationLengthEvents = function () {
-        $("#" + self.container.attr('id') + " .page_length_selector").on("change", function () {
-            var pageLengthValue = $(this).val();
-            self.filters_form.find('.page-length').val(pageLengthValue);
+        self.container.on("change", "select.page_length_selector", function(){
+            var $that = $(this);
+            var bindInputSelector = $that.data('bind-input');
+            $("body").find(bindInputSelector).val($that.val());
             self.reloadTable();
             self.container.trigger("axiolab.table.changed.pageLength");
+        });
+
+        self.container.on("axiolab.table.afterReload", function(){
+            var $pageLengthSelect = self.container.find("select.page_length_selector");
+            var bindInputSelector = $pageLengthSelect.data('bind-input');
+            var value = $(bindInputSelector).val();
+            $pageLengthSelect.val(value);
+            $pageLengthSelect.selectpicker("refresh");
         });
     };
     self.paginationEvents = function () {
